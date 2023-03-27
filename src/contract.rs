@@ -1,3 +1,6 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+#![feature(min_specialization)]
+
 use ink_lang::contract;
 use ink_prelude::string::String;
 use ink_prelude::vec::Vec;
@@ -5,8 +8,11 @@ use ink_prelude::vec::Vec;
 #[contract]
 mod art_authentication {
     use super::*;
+    use openbrush::contracts::psp34::*;
+    use openbrush::traits::Storage;
 
     #[ink(storage)]
+    #[derive(Default, Storage)]
     pub struct ArtToken {
         name: String,
         symbol: String,
@@ -15,7 +21,11 @@ mod art_authentication {
         artwork_info: Vec<String>,
         artwork_price: Vec<u128>,
         artist_royalty_fee: Vec<u8>,
+        #[storage_field]
+        psp34: psp34::Data,
     }
+
+    impl PSP34 for ArtToken {}
 
     impl ArtToken {
         #[ink(constructor)]
@@ -40,6 +50,7 @@ mod art_authentication {
                 artwork_info,
                 artwork_price,
                 artist_royalty_fee,
+                psp34: psp34::Data::new(),
             }
         }
 
@@ -55,6 +66,8 @@ mod art_authentication {
             self.artwork_info.push(artwork_info);
             self.artwork_price.push(artwork_price);
             self.artist_royalty_fee.push(artist_royalty_fee);
+
+            self.psp34.mint(caller, token_id);
 
             self.env().emit_event(Transfer {
                 from: None,
@@ -73,6 +86,8 @@ mod art_authentication {
             assert_eq!(caller, current_owner, "Only the current owner can transfer the token");
 
             self.owner_of[token_id as usize] = Some(to);
+
+            self.psp34.transfer(current_owner, to, token_id);
 
             self.env().emit_event(Transfer {
                 from: Some(current_owner),
@@ -94,3 +109,20 @@ mod art_authentication {
         token_id: u64,
     }
 }
+
+#[ink_lang::contract]
+pub mod my_psp34 {
+    use openbrush::contracts::psp34::*;
+
+    #[ink(storage)]
+    pub struct Contract {
+        #[storage_field]
+        psp34: psp34::Data,
+    }
+
+    impl PSP34 for Contract {}
+
+    impl Contract {
+        #[ink(constructor)]
+        pub fn new() -> Self {
+            Self {
