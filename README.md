@@ -47,12 +47,16 @@ contract on their behalf.
 ### Contract
 The code defines a Rust smart contract using the Ink! language, with a module called my_psp34. The Contract struct is defined with a single field:  
 • psp34: a psp34::Data struct, which is used to implement the PSP34 standard for fungible tokens.  
+
+
 The impl block defines the functionality of the contract, including:  
 • a constructor that initializes the Contract struct with a psp34::Data instance  
 • implementation of the PSP34 standard functions: total_supply, balance_of, transfer, and transfer_from.  
 The total_supply function returns the total number of tokens that have been minted. The balance_of function returns the balance of a given account.  
 The transfer function transfers tokens from the caller's account to another account.  
 The transfer_from function transfers tokens from one account to another, but only if the caller has been authorized to do so.  
+
+
 The contract also includes a few Rust attributes:  
 • #[ink(storage)] marks the struct as an Ink! storage smart contract.  
 • #[storage_field] marks a field as a persistent storage field, which means its value is persisted across contract calls.  
